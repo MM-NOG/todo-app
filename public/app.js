@@ -10,40 +10,43 @@ const countEl = document.getElementById('todo-count');
 const clearBtn = document.getElementById('clear-completed');
 const filterBtns = document.querySelectorAll('.filter-btn');
 
-// API functions
-async function fetchTodos() {
-  const res = await fetch('/api/todos');
-  todos = await res.json();
+// LocalStorage functions
+const STORAGE_KEY = 'todo-app-data';
+
+function loadTodos() {
+  const data = localStorage.getItem(STORAGE_KEY);
+  todos = data ? JSON.parse(data) : [];
   render();
 }
 
-async function addTodo(text) {
-  const res = await fetch('/api/todos', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text })
-  });
-  const newTodo = await res.json();
+function saveTodos() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+}
+
+function addTodo(text) {
+  const newTodo = {
+    id: Date.now(),
+    text: text,
+    completed: false,
+    createdAt: new Date().toISOString()
+  };
   todos.push(newTodo);
+  saveTodos();
   render();
 }
 
-async function updateTodo(id, updates) {
-  await fetch(`/api/todos/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updates)
-  });
+function updateTodo(id, updates) {
   const index = todos.findIndex(t => t.id === id);
   if (index !== -1) {
     todos[index] = { ...todos[index], ...updates };
+    saveTodos();
   }
   render();
 }
 
-async function deleteTodo(id) {
-  await fetch(`/api/todos/${id}`, { method: 'DELETE' });
+function deleteTodo(id) {
   todos = todos.filter(t => t.id !== id);
+  saveTodos();
   render();
 }
 
@@ -126,12 +129,11 @@ filterBtns.forEach(btn => {
   });
 });
 
-clearBtn.addEventListener('click', async () => {
-  const completedIds = todos.filter(t => t.completed).map(t => t.id);
-  for (const id of completedIds) {
-    await deleteTodo(id);
-  }
+clearBtn.addEventListener('click', () => {
+  todos = todos.filter(t => !t.completed);
+  saveTodos();
+  render();
 });
 
 // Initial load
-fetchTodos();
+loadTodos();
