@@ -8,7 +8,7 @@ const DATA_FILE = path.join(__dirname, 'data', 'todos.json');
 
 // Middleware
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(__dirname));
 
 // データディレクトリとファイルの初期化
 function initDataFile() {
